@@ -1,0 +1,11 @@
+## Interface: 100100
+## Interface-Retail: 100100
+
+## Title: Ignore in instance
+## Author: Karlo
+## Version: @project-version@
+## Notes: Automatically put certain characters on your ignore list when in an instance
+## SavedVariables: IgnoreInInstanceDB
+
+Libraries\Libraries.xml
+IgnoreInInstance.lua
