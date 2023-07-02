@@ -4,8 +4,10 @@
 ## Title: Ignore in instance
 ## Author: Karlo
 ## Version: @project-version@
-## Notes: Automatically put certain characters on your ignore list when in an instance
+## Notes: Automatically put specified characters on your ignore list when in an instance
 ## SavedVariables: IgnoreInInstanceDB
+## X-Embeds: LibStub, CallbackHandler, Ace3
+## X-Curse-Project-ID: 883607
 
 Libraries\Libraries.xml
 IgnoreInInstance.lua

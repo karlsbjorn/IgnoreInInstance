@@ -1,0 +1,6 @@
+package-as: IgnoreInInstance
+
+embedded-libraries:
+  - libstub
+  - callbackhandler
+  - ace3
