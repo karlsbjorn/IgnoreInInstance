@@ -1,5 +1,8 @@
 name: IgnoreInInstance Release
 
+permissions:
+  contents: write
+
 # triggers when pushing a tag
 on:
   push:
