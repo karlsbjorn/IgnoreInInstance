@@ -5,8 +5,6 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local addonName = "IgnoreInInstance"
 local addon = AceAddon:NewAddon(addonName, "AceEvent-3.0")
 
-local defaultIgnoreList = {}
-
 local function IgnoreCharacter(characterName)
     local numIgnores = C_FriendList.GetNumIgnores()
     for i = 1, numIgnores do
@@ -33,7 +31,17 @@ end
 local function OnEnterInstance()
     print("[IgnoreInInstance] Ignoring characters.")
     for _, characterName in ipairs(addon.db.profile.ignoreList) do
-        IgnoreCharacter(characterName)
+        if addon.db.profile.groupCheck then
+            local numGroupMembers = GetNumGroupMembers()
+            for i = 1, numGroupMembers do
+                local name, _, _, _, _, _, _, online = GetRaidRosterInfo(i)
+                if name == characterName then
+                    IgnoreCharacter(characterName)
+                end
+            end
+        else
+            IgnoreCharacter(characterName)
+        end
     end
 end
 
@@ -44,7 +52,7 @@ local function OnLeaveInstance()
 end
 
 function addon:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", { profile = { ignoreList = defaultIgnoreList } }, true)
+    self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", { profile = { ignoreList = {}, groupCheck = false } }, true)
     self:RegisterEvent("PLAYER_ENTERING_WORLD", self.OnPlayerEnteringWorld)
     self:RegisterEvent("PLAYER_LEAVING_WORLD", self.OnZoneChanged)
 
@@ -69,7 +77,15 @@ function addon:OnInitialize()
                     end
                     addon.db.profile.ignoreList = ignoreList
                 end,
-            }
+            },
+            groupCheck = {
+                name = "Ignore only if in your group",
+                desc = "Only ignore characters if they're in your group.",
+                type = "toggle",
+                width = "full",
+                get = function(info) return addon.db.profile.groupCheck end,
+                set = function(info, value) addon.db.profile.groupCheck = value end,
+            },
         }
     })
 
