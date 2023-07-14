@@ -9,9 +9,7 @@ local function IgnoreCharacter(characterName)
     local numIgnores = C_FriendList.GetNumIgnores()
     for i = 1, numIgnores do
         local ignoreName = C_FriendList.GetIgnoreName(i)
-        if ignoreName == characterName then
-            return
-        end
+        if ignoreName == characterName then return end
     end
     C_FriendList.AddIgnore(characterName)
 end
@@ -52,7 +50,9 @@ local function OnLeaveInstance()
 end
 
 function addon:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", { profile = { ignoreList = {}, groupCheck = false } }, true)
+    self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", {
+        profile = {ignoreList = {}, groupCheck = false}
+    }, true)
     self:RegisterEvent("PLAYER_ENTERING_WORLD", self.OnPlayerEnteringWorld)
     self:RegisterEvent("PLAYER_LEAVING_WORLD", self.OnZoneChanged)
 
@@ -62,11 +62,14 @@ function addon:OnInitialize()
         args = {
             ignoreList = {
                 name = "Ignored Characters",
-                desc = "Characters that are ignored while in an instance.\n\nEach character name should be on a separate line.",
+                desc = "Characters that are ignored while in an instance.\n\n" ..
+                       "Each character name should be on a separate line.",
                 type = "input",
                 multiline = true,
                 width = "full",
-                get = function(info) return table.concat(addon.db.profile.ignoreList, "\n") end,
+                get = function(info)
+                    return table.concat(addon.db.profile.ignoreList, "\n")
+                end,
                 set = function(info, value)
                     local ignoreList = {}
                     for characterName in value:gmatch("[^\r\n]+") do
@@ -76,16 +79,20 @@ function addon:OnInitialize()
                         end
                     end
                     addon.db.profile.ignoreList = ignoreList
-                end,
+                end
             },
             groupCheck = {
                 name = "Ignore only if in your group",
                 desc = "Only ignore characters if they're in your group.",
                 type = "toggle",
                 width = "full",
-                get = function(info) return addon.db.profile.groupCheck end,
-                set = function(info, value) addon.db.profile.groupCheck = value end,
-            },
+                get = function(info)
+                    return addon.db.profile.groupCheck
+                end,
+                set = function(info, value)
+                    addon.db.profile.groupCheck = value
+                end
+            }
         }
     })
 
@@ -94,9 +101,7 @@ end
 
 function addon:OnPlayerEnteringWorld()
     local isInInstance, instanceType = IsInInstance()
-    if isInInstance then
-        OnEnterInstance()
-    end
+    if isInInstance then OnEnterInstance() end
 end
 
 function addon:OnZoneChanged()
