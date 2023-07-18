@@ -3,7 +3,7 @@ local AceAddon = LibStub("AceAddon-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local addonName = "IgnoreInInstance"
-local addon = AceAddon:NewAddon(addonName, "AceEvent-3.0")
+IgnoreInInstance = AceAddon:NewAddon(addonName, "AceEvent-3.0")
 
 local function IgnoreCharacter(characterName)
     local numIgnores = C_FriendList.GetNumIgnores()
@@ -28,8 +28,8 @@ end
 
 local function OnEnterInstance()
     print("[IgnoreInInstance] Ignoring characters.")
-    for _, characterName in ipairs(addon.db.profile.ignoreList) do
-        if addon.db.profile.groupCheck then
+    for _, characterName in ipairs(IgnoreInInstance.db.profile.ignoreList) do
+        if IgnoreInInstance.db.profile.groupCheck then
             local numGroupMembers = GetNumGroupMembers()
             for i = 1, numGroupMembers do
                 local name, _, _, _, _, _, _, online = GetRaidRosterInfo(i)
@@ -44,14 +44,23 @@ local function OnEnterInstance()
 end
 
 local function OnLeaveInstance()
-    for _, characterName in ipairs(addon.db.profile.ignoreList) do
+    for _, characterName in ipairs(IgnoreInInstance.db.profile.ignoreList) do
         UnignoreCharacter(characterName)
     end
 end
 
-function addon:OnInitialize()
+function IgnoreInInstance:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", {
-        profile = {ignoreList = {}, groupCheck = false}
+        profile = {
+            ignoreList = {},
+            groupCheck = false,
+            instanceTypes = {
+                party = true,
+                raid = true,
+                pvp = true,
+                arena = true
+            }
+        }
     }, true)
     self:RegisterEvent("PLAYER_ENTERING_WORLD", self.OnPlayerEnteringWorld)
     self:RegisterEvent("PLAYER_LEAVING_WORLD", self.OnZoneChanged)
@@ -63,12 +72,13 @@ function addon:OnInitialize()
             ignoreList = {
                 name = "Ignored Characters",
                 desc = "Characters that are ignored while in an instance.\n\n" ..
-                       "Each character name should be on a separate line.",
+                    "Each character name should be on a separate line.",
                 type = "input",
                 multiline = true,
                 width = "full",
                 get = function(info)
-                    return table.concat(addon.db.profile.ignoreList, "\n")
+                    return table.concat(IgnoreInInstance.db.profile.ignoreList,
+                                        "\n")
                 end,
                 set = function(info, value)
                     local ignoreList = {}
@@ -78,7 +88,7 @@ function addon:OnInitialize()
                             table.insert(ignoreList, characterName)
                         end
                     end
-                    addon.db.profile.ignoreList = ignoreList
+                    IgnoreInInstance.db.profile.ignoreList = ignoreList
                 end
             },
             groupCheck = {
@@ -87,10 +97,27 @@ function addon:OnInitialize()
                 type = "toggle",
                 width = "full",
                 get = function(info)
-                    return addon.db.profile.groupCheck
+                    return IgnoreInInstance.db.profile.groupCheck
                 end,
                 set = function(info, value)
-                    addon.db.profile.groupCheck = value
+                    IgnoreInInstance.db.profile.groupCheck = value
+                end
+            },
+            instanceTypes = {
+                name = "Instance Types",
+                desc = "Select which instance types to ignore in.",
+                type = "multiselect",
+                values = {
+                    party = "Dungeon",
+                    raid = "Raid",
+                    pvp = "Battleground",
+                    arena = "Arena"
+                },
+                get = function(info, key)
+                    return IgnoreInInstance.db.profile.instanceTypes[key]
+                end,
+                set = function(info, key, value)
+                    IgnoreInInstance.db.profile.instanceTypes[key] = value
                 end
             }
         }
@@ -99,14 +126,32 @@ function addon:OnInitialize()
     AceConfigDialog:AddToBlizOptions(addonName, "Ignore In Instance")
 end
 
-function addon:OnPlayerEnteringWorld()
-    local isInInstance, instanceType = IsInInstance()
-    if isInInstance then OnEnterInstance() end
+-- Helper function to check if a value is in an array, like in Python.
+local function isInArray(value, array)
+    for _, v in ipairs(array) do if v == value then return true end end
+    return false
 end
 
-function addon:OnZoneChanged()
+function IgnoreInInstance:OnPlayerEnteringWorld()
+    local configInstanceTypes = IgnoreInInstance.db.profile.instanceTypes
+    local enabledInstanceTypes = {}
+    for instanceType, enabled in pairs(configInstanceTypes) do
+        if enabled then table.insert(enabledInstanceTypes, instanceType) end
+    end
     local isInInstance, instanceType = IsInInstance()
-    if isInInstance then
+    if isInInstance and isInArray(instanceType, enabledInstanceTypes) then
+        OnEnterInstance()
+    end
+end
+
+function IgnoreInInstance:OnZoneChanged()
+    local configInstanceTypes = IgnoreInInstance.db.profile.instanceTypes
+    local enabledInstanceTypes = {}
+    for instanceType, enabled in pairs(configInstanceTypes) do
+        if enabled then table.insert(enabledInstanceTypes, instanceType) end
+    end
+    local isInInstance, instanceType = IsInInstance()
+    if isInInstance and isInArray(instanceType, enabledInstanceTypes) then
         OnEnterInstance()
     else
         OnLeaveInstance()
