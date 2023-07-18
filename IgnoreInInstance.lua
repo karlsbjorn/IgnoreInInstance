@@ -49,6 +49,13 @@ local function OnLeaveInstance()
     end
 end
 
+local titleCase = function(phrase)
+    local result = string.gsub(phrase, "(%a)([%w_']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end)
+    return result
+end
+
 function IgnoreInInstance:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("IgnoreInInstanceDB", {
         profile = {
@@ -84,6 +91,8 @@ function IgnoreInInstance:OnInitialize()
                     local ignoreList = {}
                     for characterName in value:gmatch("[^\r\n]+") do
                         characterName = strtrim(characterName)
+                        characterName = string.gsub(characterName, "%s", "")
+                        characterName = titleCase(characterName)
                         if characterName ~= "" then
                             table.insert(ignoreList, characterName)
                         end
