@@ -1,5 +1,5 @@
-## Interface: 100105
-## Interface-Retail: 100105
+## Interface: 100200
+## Interface-Retail: 100200
 
 ## Title: Ignore in instance
 ## Author: Karlo
